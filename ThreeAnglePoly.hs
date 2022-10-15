@@ -66,10 +66,10 @@ pyramidCrossSection tri r =
   in
   Triangle abToCProjection cToPeakProjection abToPeakProjection
 
-data PyramidPoints a = PyramidPoints { a, b, c, h :: Point a }
-  deriving (Show, Eq, Ord)
+data Pyramid a = Pyramid { a, b, c, h :: a }
+  deriving (Show, Eq, Ord, Functor)
 
-pyramidPoints :: (Ord a, Num a, Floating a) => Triangle a -> a -> PyramidPoints a
+pyramidPoints :: (Ord a, Num a, Floating a) => Triangle a -> a -> Pyramid (Point a)
 pyramidPoints tri r =
   let a = Point 0 0 0
       b = Point 0 (ab tri) 0
@@ -77,7 +77,10 @@ pyramidPoints tri r =
       section = pyramidCrossSection tri r
       h = Point (pythagorasArm (ca section) (height section)) (ab tri / 2) (height section)
   in
-  PyramidPoints {..}
+  Pyramid {..}
+
+relativeToH :: (Num a, Floating a) => Pyramid (Point a) -> Pyramid (Point a)
+relativeToH pyramid = fmap (subtract (h pyramid)) pyramid
 
 ngonShortDiagonal :: (Num a, Floating a) => Int -> a
 ngonShortDiagonal n = 2 * sin ((fromIntegral n - 2) * pi / fromIntegral n / 2)
@@ -85,8 +88,8 @@ ngonShortDiagonal n = 2 * sin ((fromIntegral n - 2) * pi / fromIntegral n / 2)
 specToTriangle :: (Ord a, Num a, Floating a) => (Int, Int, Int) -> Triangle a
 specToTriangle (n1, n2, n3) = sortTriangle (ngonShortDiagonal n1) (ngonShortDiagonal n2) (ngonShortDiagonal n3)
 
-toOpenSCAD :: forall a. (PrintfArg a) => Double -> PyramidPoints a -> String
-toOpenSCAD diameter PyramidPoints {..} =
+toOpenSCAD :: forall a. (PrintfArg a) => Double -> Pyramid (Point a) -> String
+toOpenSCAD diameter Pyramid {..} =
   openSCADPrelude ++
   unlines
     [ line a h
