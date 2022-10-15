@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE DeriveFoldable #-}
 {-# LANGUAGE RecordWildCards #-}
@@ -9,18 +10,15 @@ import Data.Foldable (toList)
 import Data.List (sort)
 import Text.Printf
 
-data Triangle a = Triangle { ab, bc, ca :: a }
+data Triple a = Triple { t1, t2, t3 :: a }
   deriving (Show, Eq, Ord, Functor, Foldable)
 
-data Point a = Point { x, y, z :: a}
-  deriving (Show, Eq, Ord, Functor, Foldable)
+instance Applicative Triple where
+  pure a = Triple a a a
+  (<*>) (Triple ft1 ft2 ft3) (Triple t1 t2 t3)
+    = Triple (ft1 t1) (ft2 t2) (ft3 t3)
 
-instance Applicative Triangle where
-  pure a = Triangle a a a
-  (<*>) (Triangle fab fbc fca) (Triangle ab bc ca)
-    = Triangle (fab ab) (fbc bc) (fca ca)
-
-instance Num a => Num (Triangle a) where
+instance Num a => Num (Triple a) where
   (+) = liftA2 (+)
   (*) = liftA2 (*)
   abs = fmap abs
@@ -28,18 +26,13 @@ instance Num a => Num (Triangle a) where
   signum = fmap signum
   fromInteger = pure . fromInteger
 
-instance Applicative Point where
-  pure a = Point a a a
-  (<*>) (Point fab fbc fca) (Point ab bc ca)
-    = Point (fab ab) (fbc bc) (fca ca)
+type Point = Triple
+pattern Point { x, y, z } = Triple x y z
+{-# COMPLETE Point #-}
 
-instance Num a => Num (Point a) where
-  (+) = liftA2 (+)
-  (*) = liftA2 (*)
-  abs = fmap abs
-  negate = fmap negate
-  signum = fmap signum
-  fromInteger = pure . fromInteger
+type Triangle = Triple
+pattern Triangle { ab, bc, ca } = Triple ab bc ca
+{-# COMPLETE Triangle #-}
 
 sortTriangle :: Ord a => a -> a -> a -> Triangle a
 sortTriangle x y z =
