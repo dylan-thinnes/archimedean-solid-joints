@@ -3,12 +3,19 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE DeriveFoldable #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE TypeApplications #-}
 module ThreeAnglePoly where
 
 import Control.Applicative
 import Data.Foldable (toList)
 import Data.List (sort)
 import Text.Printf
+import System.Environment
+
+main :: IO ()
+main = do
+  [a,b,c] <- map read <$> getArgs
+  putStrLn $ toOpenSCAD $ pyramidPoints @Double (specToTriangle (a,b,c)) 1
 
 data Triple a = Triple { t1, t2, t3 :: a }
   deriving (Show, Eq, Ord, Functor, Foldable)
