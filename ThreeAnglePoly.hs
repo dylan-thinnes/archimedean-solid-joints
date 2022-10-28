@@ -88,18 +88,31 @@ ngonShortDiagonal n = 2 * sin ((fromIntegral n - 2) * pi / fromIntegral n / 2)
 specToTriangle :: (Ord a, Num a, Floating a) => (Int, Int, Int) -> Triangle a
 specToTriangle (n1, n2, n3) = sortTriangle (ngonShortDiagonal n1) (ngonShortDiagonal n2) (ngonShortDiagonal n3)
 
-toOpenSCAD :: forall a. (PrintfArg a) => Double -> Pyramid (Point a) -> String
-toOpenSCAD diameter Pyramid {..} =
+toOpenSCAD :: forall a. (Floating a, PrintfArg a) => Pyramid (Point a) -> String
+toOpenSCAD pyramid =
   openSCADPrelude ++
   unlines
-    [ line a h
-    , line b h
-    , line c h
+    [ "scale(60) difference() {"
+    , " union() {"
+    , "  difference() {"
+    , "   sphere(0.2, $fn=16);"
+    , "   translate([0,0,-1]) cube(2, center=true, $fn=16);"
+    , "  }"
+    , "  translate([0,0,-0.05]) cylinder(0.05, 0.2, 0.2, $fn=16);"
+    , " }"
+    , line a h (6.1 / 60)
+    , line b h (6.1 / 60)
+    , line c h (6.1 / 60)
+    , "}"
     ]
   where
+    Pyramid {..} = (* Point 1 1 (-1)) <$> relativeToH pyramid
+
     point :: Point a -> String
     point Point {..} = printf "[%g,%g,%g]" x y z
-    line pt0 pt1 = printf "line(%s, %s, diameter=%g);" (point pt0) (point pt1) diameter
+
+    line :: Point a -> Point a -> a -> String
+    line pt0 pt1 dia = printf " line(%s, %s, diameter=%g);" (point pt0) (point pt1) dia
 
     openSCADPrelude :: String
     openSCADPrelude = "\
